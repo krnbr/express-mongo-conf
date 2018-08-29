@@ -39,11 +39,11 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
 exports.verifyUser = passport.authenticate('jwt', {session: false});
 
 exports.verifyAdmin = function (req, res, next) {
-    console.log("--- "+req.user.admin)
+    console.log("req.user.admin - "+req.user.admin)
     if(req.user.admin){
         next();
     }else{
-        var err = new Error('You are forbidden to perform this function!');
+        var err = new Error('You are not authorised to perform this operation!');
         err.status = 403;
         return next(err);
     }

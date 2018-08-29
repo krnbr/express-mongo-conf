@@ -9,6 +9,7 @@ var FileStore = require('session-file-store')(session);
 var passport = require('passport');
 var config = require('./config');
 var authenticate = require('./authenticate');
+const createError = require('http-errors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
