@@ -3,6 +3,7 @@ var passport = require('passport');
 
 const bodyParser = require('body-parser');
 var User = require('../models/user');
+const cors = require('./cors');
 var authenticate = require('../authenticate');
 
 const userRouter = express.Router();
@@ -10,7 +11,8 @@ userRouter.use(bodyParser.json());
 
 /* GET users listing. */
 userRouter.route('/')
-    .get(authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
+    .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+    .get(cors.cors, authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
         User.find({})
             .then((users) => {
                 res.statusCode = 200;
@@ -21,7 +23,7 @@ userRouter.route('/')
     });
 
 userRouter.route('/signup')
-    .post((req, res, next) => {
+    .post(cors.corsWithOptions, (req, res, next) => {
         User.register(new User({username: req.body.username}),
             req.body.password, (err, user) => {
                 if (err) {
@@ -52,7 +54,7 @@ userRouter.route('/signup')
     });
 
 userRouter.route('/login')
-    .post(passport.authenticate('local'), (req, res) => {
+    .post(cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
         var token = authenticate.getToken({_id: req.user._id});
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -60,7 +62,8 @@ userRouter.route('/login')
     });
 
 userRouter.route('/logout')
-    .get((req, res) => {
+    .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+    .get(cors.cors, (req, res) => {
         if (req.session) {
             req.session.destroy();
             res.clearCookie('session-id');
@@ -72,5 +75,14 @@ userRouter.route('/logout')
             next(err);
         }
     });
+
+userRouter.get('/facebook/token', passport.authenticate('facebook-token'), (req, res) => {
+    if (req.user) {
+        var token = authenticate.getToken({_id: req.user._id});
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({success: true, token: token, status: 'You are successfully logged in!'});
+    }
+});
 
 module.exports = userRouter;
